@@ -18,6 +18,24 @@ class MovieDAO:
 
      If a user_id value is suppled, a `favorite` boolean property should be returned to
      signify whether the user has added the movie to their "My Favorites" list.
+     # Define the Unit of Work
+     def get_movies(tx, sort, order, limit, skip, user_id):
+        # Define the cypher statement
+        cypher = """
+            MATCH (m:Movie)
+            WHERE m.`{0}` IS NOT NULL
+            RETURN m {{ .* }} AS movie
+            ORDER BY m.`{0}` {1}
+            SKIP $skip
+            LIMIT $limit
+        """.format(sort, order)
+
+        # Run the statement within the transaction passed as the first argument
+        result = tx.run(cypher, limit=limit, skip=skip, user_id=user_id))
+        
+        # Extract a list of Movies from the Result
+        return [row.value("movie") for row in result]
+    # end:get_movies
     """
     # tag::all[]
     def all(self, sort, order, limit=6, skip=0, user_id=None):
